@@ -14,14 +14,14 @@ class TestTextNode(unittest.TestCase):
         self.assertNotEqual(node, node2)
 
     def test_url(self):
-        node = TextNode("This has a url", TextType.NORMAL, "https://www.boot.dev")
-        node2 = TextNode("This has a url", TextType.NORMAL, "https://www.boot.dev")
+        node = TextNode("This has a url", TextType.TEXT, "https://www.boot.dev")
+        node2 = TextNode("This has a url", TextType.TEXT, "https://www.boot.dev")
         self.assertEqual(node, node2)
 
-    def test_url_not_equal(self):
-        node = TextNode("This has a url", TextType.BOLD, "https://www.boot.dev")
-        node2 = TextNode("This has a url", TextType.BOLD, "https://docs.python.org")
-        self.assertNotEqual(node, node2)
+    def test_repr(self):
+        node = TextNode("Text node", TextType.TEXT, "https://www.google.com")
+        print(repr(node))
+        self.assertEqual(repr(node), "TextNode(Text node, text, https://www.google.com)")
 
 if __name__ == "__main__":
     unittest.main()
