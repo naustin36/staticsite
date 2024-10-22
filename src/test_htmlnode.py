@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import *
 
 class TestHTMLNode(unittest.TestCase):
     def test_props_to_html(self):
@@ -31,6 +31,46 @@ class TestHTMLNode(unittest.TestCase):
     def test_to_html_leaf_no_tag(self):
         node = LeafNode(None, "Raw Text!")
         self.assertEqual(node.to_html(), "Raw Text!")
+
+    def test_to_html_parent(self):
+        node = ParentNode("p",[
+            LeafNode("b", "Bold text"),
+            LeafNode(None, "Normal text"),
+            LeafNode("i", "Italic text"),
+            LeafNode(None, "Normal text")
+            ])
+        self.assertEqual(
+            node.to_html(),
+            "<p><b>Bold text</b>Normal text<i>Italic text</i>Normal text</p>"
+        )
+    
+    def test_to_html_nested_parents(self):
+        node = ParentNode("p", [
+            ParentNode("b", [
+                LeafNode("i","italics"),
+                LeafNode(None,"normal text")
+            ]),
+            LeafNode("b","bold text"),
+        ])
+        self.assertEqual(
+            node.to_html(),
+            "<p><b><i>italics</i>normal text</b><b>bold text</b></p>"
+        )
+    
+    def test_to_html_parent_no_children(self):
+        node = ParentNode("p", None)
+        try:
+            node.to_html()
+        except Exception as e:
+            print(e)
+    
+    def test_to_html_parent_props(self):
+        node = ParentNode("a", [LeafNode("b", "click")],{"href":"www.google.com"})
+        self.assertEqual(
+            node.to_html(),
+            '<a href="www.google.com"><b>click</b></a>'
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
