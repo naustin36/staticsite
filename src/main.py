@@ -1,4 +1,4 @@
-from textnode import TextNode
+from textnode import TextNode, TextType
 
 def main():
     test_node = TextNode("Test node","bold","https://www.boot.dev")
