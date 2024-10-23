@@ -1,6 +1,13 @@
 import unittest
 
-from inline_markdown import split_nodes_delimiter
+from inline_markdown import (
+    split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
+    extract_markdown_images, 
+    extract_markdown_links
+)
+
 from textnode import TextNode, TextType
 
 class TestInlineMarkdown(unittest.TestCase):
@@ -72,6 +79,124 @@ class TestInlineMarkdown(unittest.TestCase):
                 TextNode(" and also ", TextType.TEXT),
                 TextNode("italic", TextType.ITALIC),
                 TextNode(" words", TextType.TEXT)
+            ]
+        )
+
+    def test_extract_images(self):
+        text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        image_tuples = extract_markdown_images(text)
+        self.assertListEqual(
+            image_tuples,
+            [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+        )
+    
+    def test_extract_images_with_link(self):
+        text = "This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link [to boot dev](https://www.boot.dev)"
+        image_tuples = extract_markdown_images(text)
+        self.assertListEqual(
+            image_tuples,
+            [("rick roll", "https://i.imgur.com/aKaOqIh.gif")]
+        )
+
+    def test_extract_images_without_image(self):
+        text = "There are no links here"
+        image_tuples = extract_markdown_images(text)
+        self.assertListEqual(
+            image_tuples,
+            []
+        )
+
+    def test_extract_links(self):
+        text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+        link_tuples = extract_markdown_links(text)
+        self.assertListEqual(
+            link_tuples,
+            [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")]
+        )
+
+    def test_extract_links_with_image(self):
+        text = "This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link [to boot dev](https://www.boot.dev)"
+        link_tuples = extract_markdown_links(text)
+        self.assertListEqual(
+            link_tuples,
+            [("to boot dev", "https://www.boot.dev")]
+        )
+
+    def test_split_images(self):
+        node = TextNode("This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")
+            ]
+        )
+    
+    def test_split_images2(self):
+        node = TextNode("This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg) Plus a little extra", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" Plus a little extra", TextType.TEXT)
+            ]
+        )
+
+    def test_split_images_with_links(self):
+        node = TextNode("This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link [to boot dev](https://www.boot.dev)", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This text has an image ", TextType.TEXT),
+                TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+                TextNode(" and a link [to boot dev](https://www.boot.dev)", TextType.TEXT)
+            ]
+        )
+
+    def test_split_links(self):
+        node = TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev) Plus a little extra", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This is text with a link ", TextType.TEXT),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
+                TextNode(" Plus a little extra", TextType.TEXT)
+            ]
+        )
+    
+    def test_split_links_with_images(self):
+        node = TextNode("This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link [to boot dev](https://www.boot.dev)", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link ", TextType.TEXT),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev")
+            ]
+        )
+
+    def test_split_links_and_images(self):
+        node = TextNode("This text has an image ![rick roll](https://i.imgur.com/aKaOqIh.gif) and a link [to boot dev](https://www.boot.dev)", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        new_nodes = split_nodes_image(new_nodes)
+        self.assertListEqual(
+            new_nodes,
+            [
+                TextNode("This text has an image ", TextType.TEXT),
+                TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+                TextNode(" and a link ", TextType.TEXT),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev")
             ]
         )
 
