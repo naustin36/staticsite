@@ -1,11 +1,14 @@
 import unittest
 
 from inline_markdown import (
+    text_to_textnodes,
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
     extract_markdown_images, 
-    extract_markdown_links
+    extract_markdown_links,
+    markdown_to_blocks,
+    block_to_block_type
 )
 
 from textnode import TextNode, TextType
@@ -16,7 +19,10 @@ class TestInlineMarkdown(unittest.TestCase):
         new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
         self.assertEqual(
             new_nodes,
-            [TextNode("This has a ", TextType.TEXT, None), TextNode("bold", TextType.BOLD, None), TextNode(" word", TextType.TEXT, None)]
+            [
+                TextNode("This has a ", TextType.TEXT, None),
+                TextNode("bold", TextType.BOLD, None), 
+                TextNode(" word", TextType.TEXT, None)]
         )
     
     def test_split_nodes_delimiter_list(self):
@@ -197,6 +203,111 @@ class TestInlineMarkdown(unittest.TestCase):
                 TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
                 TextNode(" and a link ", TextType.TEXT),
                 TextNode("to boot dev", TextType.LINK, "https://www.boot.dev")
+            ]
+        )
+
+    def test_markdown_to_block(self):
+        markdown = "# This is a heading\n\nThis is a paragraph with **bold** and *italic* words in it.\n\n*This is first\n*This is second\n*This is third"
+        blocks = markdown_to_blocks(markdown)
+        self.assertListEqual(
+            blocks,
+            [
+                "# This is a heading",
+                "This is a paragraph with **bold** and *italic* words in it.",
+                "*This is first\n*This is second\n*This is third"
+            ]
+        )
+
+    def test_markdown_to_block_excessive_newlines_and_whitespace(self):
+        markdown = "  # This is a heading\n\n\nThis is a paragraph with **bold** and *italic* words in it.   \n\n\n\n*This is first\n*This is second\n*This is third"
+        blocks = markdown_to_blocks(markdown)
+        self.assertListEqual(
+            blocks,
+            [
+                "# This is a heading",
+                "This is a paragraph with **bold** and *italic* words in it.",
+                "*This is first\n*This is second\n*This is third"
+            ]
+        )
+
+    def test_markdown_to_block_oneblock(self):
+        markdown = "# This is a heading"
+        blocks = markdown_to_blocks(markdown)
+        self.assertListEqual(
+            blocks,
+            [
+                "# This is a heading"
+            ]
+        )
+
+    def test_block_type(self):
+        heading_block = block_to_block_type("# This is a heading")
+        code_block = block_to_block_type("```This is code```")
+        quote_block = block_to_block_type(">This is\n>a quote")
+        unordered_list_block1 = block_to_block_type("* This is an\n* unordered list")
+        unordered_list_block2 = block_to_block_type("- This is another\n- unordered list")
+        ordered_list_block = block_to_block_type("1. This is an\n2. ordered list\n3. that has\n4. four items")
+        paragraph_block = block_to_block_type("This is a paragraph")
+        messed_up_block = block_to_block_type("``This isn't code and should be a paragraph``")
+        mixed_list = block_to_block_type("* This is\n- a mixed bullet\n* list and is bad")
+
+        self.assertEqual(heading_block, "heading")
+        self.assertEqual(code_block, "code")
+        self.assertEqual(quote_block, "quote")
+        self.assertEqual(unordered_list_block1, "unordered_list")
+        self.assertEqual(unordered_list_block2, "unordered_list")
+        self.assertEqual(ordered_list_block, "ordered_list")
+        self.assertEqual(paragraph_block, "paragraph")
+        self.assertEqual(messed_up_block, "paragraph")
+        self.assertEqual(mixed_list, "paragraph")
+
+
+    def test_block_type_multiline(self):
+        code_block = block_to_block_type("```This is a test\nof multiline code```")
+
+        self.assertEqual(code_block, "code")
+
+
+class TestTextToTextNodes(unittest.TestCase):
+    def text_to_textnodes(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        text_nodes = text_to_textnodes(text)
+
+        self.assertListEqual(
+            text_nodes,
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev")
+            ]
+        )
+    
+    def test_to_textnodes2(self):
+        text = "Here is a **markdown** string that I'm *trying* to convert into [text nodes](https://www.boot.dev), but it's giving me a ![migraine](https://www.headache.ick/migraine.jpg) I *just* wanna **win!**"
+        text_nodes = text_to_textnodes(text)
+
+        self.assertListEqual(
+            text_nodes,
+            [
+                TextNode("Here is a ", TextType.TEXT),
+                TextNode("markdown", TextType.BOLD),
+                TextNode(" string that I'm ", TextType.TEXT),
+                TextNode("trying", TextType.ITALIC),
+                TextNode(" to convert into ", TextType.TEXT),
+                TextNode("text nodes", TextType.LINK, "https://www.boot.dev"),
+                TextNode(", but it's giving me a ", TextType.TEXT),
+                TextNode("migraine", TextType.IMAGE, "https://www.headache.ick/migraine.jpg"),
+                TextNode(" I ", TextType.TEXT),
+                TextNode("just", TextType.ITALIC),
+                TextNode(" wanna ", TextType.TEXT),
+                TextNode("win!", TextType.BOLD)
             ]
         )
 
