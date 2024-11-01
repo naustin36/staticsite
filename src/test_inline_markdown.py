@@ -207,26 +207,26 @@ class TestInlineMarkdown(unittest.TestCase):
         )
 
     def test_markdown_to_block(self):
-        markdown = "# This is a heading\n\nThis is a paragraph with **bold** and *italic* words in it.\n\n*This is first\n*This is second\n*This is third"
+        markdown = "# This is a heading\n\nThis is a paragraph with **bold** and *italic* words in it.\n\n* This is first\n* This is second\n* This is third"
         blocks = markdown_to_blocks(markdown)
         self.assertListEqual(
             blocks,
             [
                 "# This is a heading",
                 "This is a paragraph with **bold** and *italic* words in it.",
-                "*This is first\n*This is second\n*This is third"
+                "* This is first\n* This is second\n* This is third"
             ]
         )
 
     def test_markdown_to_block_excessive_newlines_and_whitespace(self):
-        markdown = "  # This is a heading\n\n\nThis is a paragraph with **bold** and *italic* words in it.   \n\n\n\n*This is first\n*This is second\n*This is third"
+        markdown = "  # This is a heading\n\n\nThis is a paragraph with **bold** and *italic* words in it.   \n\n\n\n* This is first\n* This is second\n* This is third"
         blocks = markdown_to_blocks(markdown)
         self.assertListEqual(
             blocks,
             [
                 "# This is a heading",
                 "This is a paragraph with **bold** and *italic* words in it.",
-                "*This is first\n*This is second\n*This is third"
+                "* This is first\n* This is second\n* This is third"
             ]
         )
 
