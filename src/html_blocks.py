@@ -51,6 +51,7 @@ def quote_block_to_html_nodes(block):
     filtered_lines = []
     for line in lines:
         line = line.lstrip(">")
+        line = line.strip()
         filtered_lines.append(line)
     filtered_block = "\n".join(filtered_lines)
     child_nodes = text_to_children(filtered_block)

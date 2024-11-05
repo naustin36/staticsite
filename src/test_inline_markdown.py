@@ -8,7 +8,8 @@ from inline_markdown import (
     extract_markdown_images, 
     extract_markdown_links,
     markdown_to_blocks,
-    block_to_block_type
+    block_to_block_type,
+    extract_title
 )
 
 from textnode import TextNode, TextType

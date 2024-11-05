@@ -101,6 +101,13 @@ def extract_markdown_links(text):
     # Returns a list of tuples. Each tuple contains the anchor text and URL for the extracted links.
     return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
 
+def extract_title(markdown):
+    blocks = markdown_to_blocks(markdown)
+    if not blocks[0].startswith("# "):
+        raise Exception("Missing h1 header")
+    return blocks[0][2:].strip()
+    
+
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
     final_blocks = []
